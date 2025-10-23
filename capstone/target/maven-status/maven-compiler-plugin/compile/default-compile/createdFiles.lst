@@ -1,8 +1,11 @@
+aplicacion\EDITAR_PANES$IngredientesTableModel.class
 aplicacion\inicio$3.class
 aplicacion\INICIO_TORTAS$6.class
 aplicacion\INICIO_TORTAS.class
 aplicacion\INICIO_PANES$2.class
+aplicacion\SELECCION_PANES$3.class
 aplicacion\INICIO_TORTAS$2.class
+aplicacion\EDITAR_TORTAS$IngredientesTableModel.class
 aplicacion\NUEVO_PANES$2.class
 aplicacion\INICIO_PANES$5.class
 aplicacion\INICIO_PANES.class
@@ -38,6 +41,7 @@ aplicacion\NUEVO_TORTAS$6.class
 aplicacion\NUEVO_TORTAS$5.class
 clases\RecipeDao$Receta.class
 aplicacion\INICIO_PANES$3.class
+aplicacion\SELECCION_PANES$4.class
 aplicacion\EDITAR_PANES$2.class
 aplicacion\INICIO_TORTAS$7.class
 aplicacion\SELECCION_PANES$1.class

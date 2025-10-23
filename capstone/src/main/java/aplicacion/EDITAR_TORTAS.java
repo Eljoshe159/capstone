@@ -13,13 +13,19 @@ import javax.swing.table.DefaultTableModel;
  * @author jose
  */
 public class EDITAR_TORTAS extends javax.swing.JFrame {
-
+    class IngredientesTableModel extends javax.swing.table.DefaultTableModel {
+    IngredientesTableModel() { super(new Object[]{"Ingrediente","Cantidad","Unidad","Nota"}, 0); }
+    @Override public boolean isCellEditable(int row, int col) { return true; }        // todas editables
+    @Override public Class<?> getColumnClass(int col) { return (col == 1) ? Double.class : String.class; }
+}
+    private IngredientesTableModel ingredientesModel = new IngredientesTableModel();
     private final RecipeDao recipeDao = new RecipeDao();
     private int recipeId = -1;
     
     public EDITAR_TORTAS() {
         initComponents();
         setLocationRelativeTo(null);
+        configurarTablaIngredientes();
     }
 
    public EDITAR_TORTAS(int recipeId) {
@@ -27,30 +33,29 @@ public class EDITAR_TORTAS extends javax.swing.JFrame {
         this.recipeId = recipeId;
         cargarReceta();
     }
-
+   private void configurarTablaIngredientes() {
+    jTable1.setModel(ingredientesModel);
+    jTable1.setAutoCreateRowSorter(true);
+    jTable1.setRowHeight(22);
+   }
     private void cargarReceta() {
         try {
-            RecipeDao.Receta r = recipeDao.obtenerRecetaPorId(recipeId);
+        RecipeDao.Receta r = recipeDao.obtenerRecetaPorId(recipeId);
 
-            // Ajusta a tus nombres reales de componentes:
-            jTextField1.setText(r.nombre);                      // nombre
-            jTextField2.setText(r.notas == null ? "" : r.notas); // notas/comentario
+        // Cabecera
+        jTextField1.setText(r.nombre);
+        jTextField2.setText(r.notas == null ? "" : r.notas);
 
-            DefaultTableModel dtm = new DefaultTableModel(
-                new Object[]{"Ingrediente","Cantidad","Unidad","Nota"}, 0
-            ) { @Override public boolean isCellEditable(int row, int col) { return false; } };
-
-            for (RecipeDao.Detalle d : r.items) {
-                dtm.addRow(new Object[]{ d.ingrediente, d.cantidad, d.unidad, d.nota });
-            }
-            jTable1.setModel(dtm);
-            jTable1.setAutoCreateRowSorter(true);
-
-        } catch (Exception ex) {
-            javax.swing.JOptionPane.showMessageDialog(this,
-                "Error cargando receta: " + ex.getMessage(),
-                "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
+        // Detalle en el model editable
+        ingredientesModel.setRowCount(0); // limpia
+        for (RecipeDao.Detalle d : r.items) {
+            ingredientesModel.addRow(new Object[]{ d.ingrediente, d.cantidad, d.unidad, d.nota });
         }
+    } catch (Exception ex) {
+        javax.swing.JOptionPane.showMessageDialog(this,
+            "Error cargando receta: " + ex.getMessage(),
+            "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
+    }
     }
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -93,6 +98,11 @@ public class EDITAR_TORTAS extends javax.swing.JFrame {
 
         jButton5.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
         jButton5.setText("GUARDAR");
+        jButton5.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton5ActionPerformed(evt);
+            }
+        });
 
         jLabel2.setText("NOMBRE DE LA RECETA");
 
@@ -160,6 +170,79 @@ public class EDITAR_TORTAS extends javax.swing.JFrame {
         dispose();
     }
     }//GEN-LAST:event_jButton4ActionPerformed
+
+    private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
+        if (jTable1.isEditing()) {
+        jTable1.getCellEditor().stopCellEditing();
+    }
+
+    try {
+        // 1) Lee cabecera
+        String nombre = jTextField1.getText().trim();
+        String notas  = jTextField2.getText();   // si luego usas JTextArea, queda igual
+        double base   = 1.0; // si usas servings_base, aquí pon el valor real (spinner/campo)
+
+        if (nombre.isEmpty()) {
+            javax.swing.JOptionPane.showMessageDialog(this, "El nombre no puede estar vacío.",
+                    "Validación", javax.swing.JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        // 2) Lee detalle desde la tabla editable (ingredientesModel)
+        java.util.List<clases.RecipeDao.Detalle> items = new java.util.ArrayList<>();
+        for (int i = 0; i < ingredientesModel.getRowCount(); i++) {
+            String ing   = String.valueOf(ingredientesModel.getValueAt(i, 0)).trim();
+            String qtyS  = String.valueOf(ingredientesModel.getValueAt(i, 1)).trim();
+            String unit  = String.valueOf(ingredientesModel.getValueAt(i, 2)).trim();
+            String note  = String.valueOf(ingredientesModel.getValueAt(i, 3));
+
+            if (ing.isEmpty() && unit.isEmpty() && qtyS.isEmpty()) continue; // fila vacía → ignora
+
+            double qty;
+            try { qty = Double.parseDouble(qtyS); }
+            catch (NumberFormatException nfe) {
+                javax.swing.JOptionPane.showMessageDialog(this,
+                        "Cantidad inválida en la fila " + (i + 1) + ".", "Validación",
+                        javax.swing.JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            if (ing.isEmpty()) {
+                javax.swing.JOptionPane.showMessageDialog(this,
+                        "Ingrediente vacío en la fila " + (i + 1) + ".", "Validación",
+                        javax.swing.JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            if (unit.isEmpty()) {
+                javax.swing.JOptionPane.showMessageDialog(this,
+                        "Unidad vacía en la fila " + (i + 1) + ".", "Validación",
+                        javax.swing.JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            clases.RecipeDao.Detalle d = new clases.RecipeDao.Detalle();
+            d.ingrediente = ing;
+            d.cantidad    = qty;
+            d.unidad      = unit;
+            d.nota        = note == null ? "" : note;
+            items.add(d);
+        }
+
+        // 3) Persiste
+        recipeDao.actualizarReceta(recipeId, nombre, base, notas, items);
+
+        javax.swing.JOptionPane.showMessageDialog(this, "Receta actualizada correctamente.",
+                "Éxito", javax.swing.JOptionPane.INFORMATION_MESSAGE);
+
+        // 4) Volver a la lista (opcional)
+        new INICIO_TORTAS().setVisible(true);
+        dispose();
+
+    } catch (Exception ex) {
+        javax.swing.JOptionPane.showMessageDialog(this,
+                "Error al guardar: " + ex.getMessage(), "Error",
+                javax.swing.JOptionPane.ERROR_MESSAGE);
+    }
+    }//GEN-LAST:event_jButton5ActionPerformed
 
     /**
      * @param args the command line arguments

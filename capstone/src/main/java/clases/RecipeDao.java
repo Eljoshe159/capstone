@@ -244,4 +244,85 @@ public Receta obtenerRecetaPorId(int recipeId) throws Exception {
     }
     return out;
 }
+
+// En clases/RecipeDao.java
+public void actualizarReceta(int recipeId, String nuevoNombre, double nuevaBase, String nuevasNotas,
+                             java.util.List<Detalle> items) throws Exception {
+    final String sqlUpdHead =
+        "UPDATE recipes SET name = ?, servings_base = ?, notes = ? WHERE recipe_id = ?";
+    final String sqlDelDet  =
+        "DELETE FROM recipe_ingredients WHERE recipe_id = ?";
+    final String sqlIngId   =
+        "SELECT ingredient_id FROM ingredients WHERE name = ?";
+    final String sqlUniId   =
+        "SELECT unit_id FROM units WHERE symbol = ? OR name = ? LIMIT 1";
+    final String sqlInsDet  =
+        "INSERT INTO recipe_ingredients (recipe_id, ingredient_id, quantity, unit_id, notes) " +
+        "VALUES (?,?,?,?,?)";
+
+    try (java.sql.Connection cn = infra.db.getConnection()) {
+        cn.setAutoCommit(false);
+        try {
+            // 1) cabecera
+            try (java.sql.PreparedStatement ps = cn.prepareStatement(sqlUpdHead)) {
+                ps.setString(1, nuevoNombre);
+                ps.setDouble(2, nuevaBase);
+                ps.setString(3, nuevasNotas == null ? "" : nuevasNotas);
+                ps.setInt(4, recipeId);
+                ps.executeUpdate();
+            }
+
+            // 2) borrar detalle
+            try (java.sql.PreparedStatement ps = cn.prepareStatement(sqlDelDet)) {
+                ps.setInt(1, recipeId);
+                ps.executeUpdate();
+            }
+
+            // 3) reinsertar detalle
+            try (java.sql.PreparedStatement psIng = cn.prepareStatement(sqlIngId);
+                 java.sql.PreparedStatement psUni = cn.prepareStatement(sqlUniId);
+                 java.sql.PreparedStatement psDet = cn.prepareStatement(sqlInsDet)) {
+
+                for (Detalle d : items) {
+                    if (d == null) continue;
+                    String ing = d.ingrediente == null ? "" : d.ingrediente.trim();
+                    if (ing.isEmpty()) continue; // ignora filas vacías
+
+                    int ingId;
+                    psIng.setString(1, ing);
+                    try (java.sql.ResultSet rs = psIng.executeQuery()) {
+                        if (!rs.next()) throw new RuntimeException("Ingrediente no existe: " + ing);
+                        ingId = rs.getInt(1);
+                    }
+
+                    String uni = d.unidad == null ? "" : d.unidad.trim();
+                    int uniId;
+                    psUni.setString(1, uni);
+                    psUni.setString(2, uni);
+                    try (java.sql.ResultSet rs = psUni.executeQuery()) {
+                        if (!rs.next()) throw new RuntimeException("Unidad no existe: " + uni);
+                        uniId = rs.getInt(1);
+                    }
+
+                    psDet.setInt(1, recipeId);
+                    psDet.setInt(2, ingId);
+                    psDet.setDouble(3, d.cantidad);
+                    psDet.setInt(4, uniId);
+                    psDet.setString(5, d.nota == null ? "" : d.nota);
+                    psDet.executeUpdate();
+                }
+            }
+
+            cn.commit();
+        } catch (Exception e) {
+            cn.rollback();
+            throw e;
+        } finally {
+            try { cn.setAutoCommit(true); } catch (java.sql.SQLException ignore) {}
+        }
+    }
+    
+}
+
+
 }

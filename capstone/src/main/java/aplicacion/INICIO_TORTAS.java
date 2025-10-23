@@ -31,8 +31,9 @@ public class INICIO_TORTAS extends javax.swing.JFrame {
                 this, "Error cargando tortas: " + ex.getMessage(),
                 "BD", javax.swing.JOptionPane.ERROR_MESSAGE
             );
-        }
+     }   
     }
+    
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -213,8 +214,32 @@ public class INICIO_TORTAS extends javax.swing.JFrame {
     }//GEN-LAST:event_jButton3ActionPerformed
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-        new SELECCION_TORTAS().setVisible(true);
+        int viewRow = jTable1.getSelectedRow();
+    if (viewRow == -1) {
+        javax.swing.JOptionPane.showMessageDialog(this, "Selecciona una receta.", "Aviso",
+                javax.swing.JOptionPane.WARNING_MESSAGE);
+        return;
+    }
+
+    int modelRow = jTable1.convertRowIndexToModel(viewRow);
+    String nombre = jTable1.getModel().getValueAt(modelRow, 0).toString();
+
+    try {
+        Integer id = recipeDao.buscarIdPorCategoriaYNombre("TORTAS", nombre);
+        if (id == null) {
+            javax.swing.JOptionPane.showMessageDialog(this, "No se encontró la receta.", "Aviso",
+                    javax.swing.JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        // 👉 Abre la pantalla de transformar con el ID
+        new SELECCION_PANES(id).setVisible(true);  // ajusta el nombre de la clase si difiere
         dispose();
+
+    } catch (Exception ex) {
+        javax.swing.JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(),
+                "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
+    }
     }//GEN-LAST:event_jButton2ActionPerformed
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
