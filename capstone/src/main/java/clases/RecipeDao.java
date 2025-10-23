@@ -121,4 +121,127 @@ public int insertarRecetaConDetalle(
         }
     }
  }
+private Integer findRecipeId(Connection cn, String categoryName, String recipeName) throws SQLException {
+    final String sql =
+        "SELECT r.recipe_id " +
+        "FROM recipes r " +
+        "JOIN categories c ON c.category_id = r.category_id " +
+        "WHERE c.name = ? AND r.name = ? " +
+        "LIMIT 1";
+    try (PreparedStatement ps = cn.prepareStatement(sql)) {
+        ps.setString(1, categoryName);
+        ps.setString(2, recipeName);
+        try (ResultSet rs = ps.executeQuery()) {
+            return rs.next() ? rs.getInt(1) : null;
+        }
+    }
+}
+public boolean eliminarPorCategoriaYNombre(String categoryName, String recipeName) throws Exception {
+    try (Connection cn = db.getConnection()) {
+        cn.setAutoCommit(false);
+        try {
+            Integer recipeId = findRecipeId(cn, categoryName, recipeName);
+            if (recipeId == null) { // no existe
+                cn.rollback();
+                return false;
+            }
+
+            // 1) borrar detalle (si tu FK ya tiene ON DELETE CASCADE puedes omitirlo)
+            try (PreparedStatement ps = cn.prepareStatement(
+                    "DELETE FROM recipe_ingredients WHERE recipe_id = ?")) {
+                ps.setInt(1, recipeId);
+                ps.executeUpdate();
+            }
+
+            // 2) borrar receta
+            int affected;
+            try (PreparedStatement ps = cn.prepareStatement(
+                    "DELETE FROM recipes WHERE recipe_id = ?")) {
+                ps.setInt(1, recipeId);
+                affected = ps.executeUpdate();
+            }
+
+            cn.commit();
+            return affected > 0;
+        } catch (Exception ex) {
+            cn.rollback();
+            throw ex;
+        } finally {
+            try { cn.setAutoCommit(true); } catch (SQLException ignore) {}
+        }
+    }
+}
+public static class Receta {
+    public int recipeId;
+    public String nombre;
+    public double servingsBase;
+    public String notas;           // usa 'notes' o 'description' según tu tabla
+    public List<Detalle> items = new ArrayList<>();
+}
+
+/** Devuelve recipe_id por (categoría, nombre). */
+public Integer buscarIdPorCategoriaYNombre(String categoryName, String recipeName) throws Exception {
+    final String sql =
+        "SELECT r.recipe_id " +
+        "FROM recipes r " +
+        "JOIN categories c ON c.category_id = r.category_id " +
+        "WHERE c.name = ? AND r.name = ? " +
+        "LIMIT 1";
+    try (Connection cn = db.getConnection();
+         PreparedStatement ps = cn.prepareStatement(sql)) {
+        ps.setString(1, categoryName);
+        ps.setString(2, recipeName);
+        try (ResultSet rs = ps.executeQuery()) {
+            return rs.next() ? rs.getInt(1) : null;
+        }
+    }
+}
+public Receta obtenerRecetaPorId(int recipeId) throws Exception {
+    Receta out = new Receta();
+
+    // Cabecera (ajusta 'notes' por 'description' si fuera tu caso)
+    final String sqlHead =
+        "SELECT r.recipe_id, r.name, r.servings_base, r.notes " +
+        "FROM recipes r " +
+        "WHERE r.recipe_id = ?";
+
+    // Detalle
+    final String sqlDet =
+        "SELECT i.name AS ingrediente, ri.quantity, " +
+        "       COALESCE(u.symbol, u.name) AS unidad, ri.notes " +
+        "FROM recipe_ingredients ri " +
+        "JOIN ingredients i ON i.ingredient_id = ri.ingredient_id " +
+        "LEFT JOIN units u ON u.unit_id = ri.unit_id " +
+        "WHERE ri.recipe_id = ? " +
+        "ORDER BY i.name";
+
+    try (Connection cn = db.getConnection()) {
+        // Cabecera
+        try (PreparedStatement ps = cn.prepareStatement(sqlHead)) {
+            ps.setInt(1, recipeId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) throw new RuntimeException("Receta no encontrada (id=" + recipeId + ")");
+                out.recipeId    = rs.getInt("recipe_id");
+                out.nombre      = rs.getString("name");
+                out.servingsBase= rs.getDouble("servings_base");
+                out.notas       = rs.getString("notes"); // o "description"
+            }
+        }
+        // Detalle
+        try (PreparedStatement ps = cn.prepareStatement(sqlDet)) {
+            ps.setInt(1, recipeId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Detalle d = new Detalle();
+                    d.ingrediente = rs.getString("ingrediente");
+                    d.cantidad    = rs.getDouble("quantity");
+                    d.unidad      = rs.getString("unidad");
+                    d.nota        = rs.getString("notes");
+                    out.items.add(d);
+                }
+            }
+        }
+    }
+    return out;
+}
 }

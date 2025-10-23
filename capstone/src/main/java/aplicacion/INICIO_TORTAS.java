@@ -91,6 +91,11 @@ public class INICIO_TORTAS extends javax.swing.JFrame {
 
         jButton4.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
         jButton4.setText("ELIMINAR");
+        jButton4.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton4ActionPerformed(evt);
+            }
+        });
 
         jButton5.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
         jButton5.setText("NUEVO");
@@ -183,8 +188,28 @@ public class INICIO_TORTAS extends javax.swing.JFrame {
     }//GEN-LAST:event_jButton5ActionPerformed
 
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
-    new EDITAR_TORTAS().setVisible(true);
-    dispose();
+    int viewRow = jTable1.getSelectedRow();
+    if (viewRow == -1) {
+        javax.swing.JOptionPane.showMessageDialog(this, "Selecciona una receta.", "Aviso",
+                javax.swing.JOptionPane.WARNING_MESSAGE);
+        return;
+    }
+    int modelRow = jTable1.convertRowIndexToModel(viewRow);
+    String nombre = jTable1.getModel().getValueAt(modelRow, 0).toString();
+
+    try {
+        Integer id = recipeDao.buscarIdPorCategoriaYNombre("TORTAS", nombre);
+        if (id == null) {
+            javax.swing.JOptionPane.showMessageDialog(this, "No se encontró la receta.", "Aviso",
+                    javax.swing.JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        new EDITAR_TORTAS(id).setVisible(true);
+        dispose();
+    } catch (Exception ex) {
+        javax.swing.JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(),
+                "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
+    }
     }//GEN-LAST:event_jButton3ActionPerformed
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
@@ -195,6 +220,56 @@ public class INICIO_TORTAS extends javax.swing.JFrame {
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         cargarNombres(jTextField1.getText());
     }//GEN-LAST:event_jButton1ActionPerformed
+
+    private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
+         int viewRow = jTable1.getSelectedRow();
+    if (viewRow == -1) {
+        javax.swing.JOptionPane.showMessageDialog(
+            this, "Selecciona una receta para borrar.", "Aviso",
+            javax.swing.JOptionPane.WARNING_MESSAGE
+        );
+        return;
+    }
+
+    int modelRow = jTable1.convertRowIndexToModel(viewRow);
+    String nombre = jTable1.getModel().getValueAt(modelRow, 0).toString();
+
+    int ok = javax.swing.JOptionPane.showConfirmDialog(
+        this,
+        "¿Borrar la receta \"" + nombre + "\" de TORTAS?",
+        "Confirmar borrado",
+        javax.swing.JOptionPane.YES_NO_OPTION,
+        javax.swing.JOptionPane.WARNING_MESSAGE
+    );
+    if (ok != javax.swing.JOptionPane.YES_OPTION) return;
+
+    try {
+        boolean borrado = recipeDao.eliminarPorCategoriaYNombre("TORTAS", nombre);
+        if (borrado) {
+            javax.swing.JOptionPane.showMessageDialog(this, "Receta eliminada.", "Éxito",
+                    javax.swing.JOptionPane.INFORMATION_MESSAGE);
+            cargarNombres(jTextField1.getText()); // refresca la tabla manteniendo el filtro
+        } else {
+            javax.swing.JOptionPane.showMessageDialog(this, "No se encontró la receta.", "Aviso",
+                    javax.swing.JOptionPane.INFORMATION_MESSAGE);
+        }
+    } catch (java.sql.SQLException e) {
+        String sqlState = e.getSQLState();
+        String msg = e.getMessage();
+        if ("23000".equals(sqlState) || "23503".equals(sqlState) ||
+            (msg != null && msg.toLowerCase().contains("foreign key"))) {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                "No se puede borrar porque la receta está referenciada por otros datos.",
+                "Restricción de integridad", javax.swing.JOptionPane.ERROR_MESSAGE);
+        } else {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                "Error al borrar: " + msg, "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
+        }
+    } catch (Exception ex) {
+        javax.swing.JOptionPane.showMessageDialog(this,
+            "Error: " + ex.getMessage(), "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
+    }
+    }//GEN-LAST:event_jButton4ActionPerformed
 
     /**
      * @param args the command line arguments

@@ -1,23 +1,53 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package aplicacion;
 
-/**
- *
- * @author jose
- */
+import clases.RecipeDao;
+import javax.swing.table.DefaultTableModel;
+
+
 public class EDITAR_PANES extends javax.swing.JFrame {
 
+    private final RecipeDao recipeDao = new RecipeDao();
+    private int recipeId = -1;
     /**
      * Creates new form EDITAR_PANES
      */
     public EDITAR_PANES() {
         initComponents();
+        setLocationRelativeTo(null);
     }
 
+    public EDITAR_PANES(int recipeId) {
+        this();                // llama al constructor por defecto (initComponents)
+        this.recipeId = recipeId;
+        cargarReceta();        // carga datos en los controles
+    }
+    private void cargarReceta() {
+        try {
+            RecipeDao.Receta r = recipeDao.obtenerRecetaPorId(recipeId);
+
+            // ⚠️ Ajusta los nombres de tus componentes si difieren:
+            // nombre:
+            jTextField1.setText(r.nombre);                 // si tu campo se llama distinto, cámbialo
+            // notas/comentario:
+            jTextField2.setText(r.notas == null ? "" : r.notas);
+
+            // tabla de ingredientes:
+            DefaultTableModel dtm = new DefaultTableModel(
+                new Object[]{"Ingrediente","Cantidad","Unidad","Nota"}, 0
+            ) { @Override public boolean isCellEditable(int row, int col) { return false; } };
+
+            for (RecipeDao.Detalle d : r.items) {
+                dtm.addRow(new Object[]{ d.ingrediente, d.cantidad, d.unidad, d.nota });
+            }
+            jTable1.setModel(dtm);               // si tu tabla tiene otro nombre, cámbialo
+            jTable1.setAutoCreateRowSorter(true);
+        } catch (Exception ex) {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                "Error cargando receta: " + ex.getMessage(),
+                "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
+        }
+    }
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -34,6 +64,7 @@ public class EDITAR_PANES extends javax.swing.JFrame {
         jButton4 = new javax.swing.JButton();
         jButton5 = new javax.swing.JButton();
         jLabel2 = new javax.swing.JLabel();
+        jTextField2 = new javax.swing.JTextField();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -54,7 +85,7 @@ public class EDITAR_PANES extends javax.swing.JFrame {
         jScrollPane1.setViewportView(jTable1);
 
         jButton4.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
-        jButton4.setText("ELIMINAR");
+        jButton4.setText("CANCELAR");
         jButton4.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton4ActionPerformed(evt);
@@ -74,10 +105,6 @@ public class EDITAR_PANES extends javax.swing.JFrame {
                 .addGap(37, 37, 37)
                 .addComponent(jLabel1)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-            .addGroup(layout.createSequentialGroup()
-                .addGap(18, 18, 18)
-                .addComponent(jScrollPane1)
-                .addContainerGap())
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addGap(137, 137, 137)
                 .addComponent(jButton5, javax.swing.GroupLayout.PREFERRED_SIZE, 220, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -90,6 +117,12 @@ public class EDITAR_PANES extends javax.swing.JFrame {
                 .addGap(28, 28, 28)
                 .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 638, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(122, 122, 122))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addGap(18, 18, 18)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jTextField2)
+                    .addComponent(jScrollPane1))
+                .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -101,8 +134,10 @@ public class EDITAR_PANES extends javax.swing.JFrame {
                     .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel2))
                 .addGap(18, 18, 18)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(36, 36, 36)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 218, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jTextField2, javax.swing.GroupLayout.PREFERRED_SIZE, 221, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jButton5, javax.swing.GroupLayout.PREFERRED_SIZE, 63, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jButton4, javax.swing.GroupLayout.PREFERRED_SIZE, 63, javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -170,5 +205,6 @@ public class EDITAR_PANES extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTable jTable1;
     private javax.swing.JTextField jTextField1;
+    private javax.swing.JTextField jTextField2;
     // End of variables declaration//GEN-END:variables
 }
