@@ -13,7 +13,7 @@ public class NUEVO_PANES extends javax.swing.JFrame {
     }
 
     private void configurarTablaDetalle() {
-        // Modelo: Ingrediente (String), Cantidad (Number), Unidad (String), Nota (String)
+
         DefaultTableModel model = new DefaultTableModel(
             new Object[]{"Ingrediente","Cantidad","Unidad","Nota"}, 0
         ) {
@@ -30,10 +30,10 @@ public class NUEVO_PANES extends javax.swing.JFrame {
         jTable1.setFillsViewportHeight(true);
         jTable1.setRowHeight(24);
         TableColumnModel cm = jTable1.getColumnModel();
-        cm.getColumn(0).setPreferredWidth(240); // Ingrediente
-        cm.getColumn(1).setPreferredWidth(90);  // Cantidad
-        cm.getColumn(2).setPreferredWidth(120); // Unidad
-        cm.getColumn(3).setPreferredWidth(260); // Nota
+        cm.getColumn(0).setPreferredWidth(240);
+        cm.getColumn(1).setPreferredWidth(90); 
+        cm.getColumn(2).setPreferredWidth(120);
+        cm.getColumn(3).setPreferredWidth(260);
         
     }
     @SuppressWarnings("unchecked")
@@ -173,7 +173,7 @@ public class NUEVO_PANES extends javax.swing.JFrame {
     
     private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
          int r = javax.swing.JOptionPane.showConfirmDialog(
-        this, // si estás en un JFrame; si es un JPanel, igual sirve
+        this, 
         "¿Estás seguro?",
         "Confirmación",
         javax.swing.JOptionPane.YES_NO_OPTION,
@@ -202,14 +202,14 @@ public class NUEVO_PANES extends javax.swing.JFrame {
     if (row >= 0) {
         m.removeRow(row);
     } else if (m.getRowCount() > 0) {
-        m.removeRow(m.getRowCount() - 1); // si no hay selección, elimina la última
+        m.removeRow(m.getRowCount() - 1); 
     }
     }//GEN-LAST:event_menosActionPerformed
 
     private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
          try {
         String nombre = nombre_receta.getText().trim();
-        String desc   = jTextField2.getText().trim(); // tu campo "descripción"
+        String desc   = jTextField2.getText().trim();
         if (nombre.isEmpty()) {
             javax.swing.JOptionPane.showMessageDialog(this, "Ingresa el nombre de la receta.");
             return;
@@ -224,7 +224,7 @@ public class NUEVO_PANES extends javax.swing.JFrame {
             Object uni  = m.getValueAt(i, 2);
             Object nota = m.getValueAt(i, 3);
 
-            if (ing == null || ing.toString().trim().isEmpty()) continue; // ignora filas vacías
+            if (ing == null || ing.toString().trim().isEmpty()) continue;
 
             clases.RecipeDao.Detalle d = new clases.RecipeDao.Detalle();
             d.ingrediente = ing.toString().trim();
@@ -243,8 +243,7 @@ public class NUEVO_PANES extends javax.swing.JFrame {
         int id = dao.insertarRecetaConDetalle("PANES", nombre, desc, 1.0, items);
 
         javax.swing.JOptionPane.showMessageDialog(this, "Receta guardada (ID " + id + ").");
-        // Aquí puedes volver a INICIO_PANES o limpiar formulario
-        // new INICIO_PANES().setVisible(true); dispose();
+
     } catch (Exception ex) {
         javax.swing.JOptionPane.showMessageDialog(this, "Error al guardar: " + ex.getMessage(),
                 "BD", javax.swing.JOptionPane.ERROR_MESSAGE);

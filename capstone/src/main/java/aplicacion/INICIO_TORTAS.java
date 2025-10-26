@@ -232,8 +232,8 @@ public class INICIO_TORTAS extends javax.swing.JFrame {
             return;
         }
 
-        // 👉 Abre la pantalla de transformar con el ID
-        new SELECCION_PANES(id).setVisible(true);  // ajusta el nombre de la clase si difiere
+
+        new SELECCION_PANES(id).setVisible(true);
         dispose();
 
     } catch (Exception ex) {

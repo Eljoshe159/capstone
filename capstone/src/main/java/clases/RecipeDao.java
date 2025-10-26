@@ -35,9 +35,9 @@ public class RecipeDao {
     }
 
 public static class Detalle {
-    public String ingrediente;  // nombre exacto del ingrediente
+    public String ingrediente;
     public double cantidad;
-    public String unidad;       // símbolo o nombre de unidad (g, kg, ml, L, u)
+    public String unidad;   
     public String nota;
 }
 
@@ -47,8 +47,6 @@ public int insertarRecetaConDetalle(
 
     String sqlCat   = "SELECT category_id FROM categories WHERE name=?";
     String sqlInsR  = "INSERT INTO recipes (category_id, name, servings_base, notes) VALUES (?,?,?,?)";
-    // Si tu tabla tiene columna 'description', usa esta otra línea y comenta la anterior:
-    // String sqlInsR = "INSERT INTO recipes (category_id, name, servings_base, description) VALUES (?,?,?,?)";
 
     String sqlIngId = "SELECT ingredient_id FROM ingredients WHERE name=?";
     String sqlUniId = "SELECT unit_id FROM units WHERE symbol=? OR name=? LIMIT 1";
@@ -146,14 +144,12 @@ public boolean eliminarPorCategoriaYNombre(String categoryName, String recipeNam
                 return false;
             }
 
-            // 1) borrar detalle (si tu FK ya tiene ON DELETE CASCADE puedes omitirlo)
             try (PreparedStatement ps = cn.prepareStatement(
                     "DELETE FROM recipe_ingredients WHERE recipe_id = ?")) {
                 ps.setInt(1, recipeId);
                 ps.executeUpdate();
             }
 
-            // 2) borrar receta
             int affected;
             try (PreparedStatement ps = cn.prepareStatement(
                     "DELETE FROM recipes WHERE recipe_id = ?")) {
@@ -179,7 +175,7 @@ public static class Receta {
     public List<Detalle> items = new ArrayList<>();
 }
 
-/** Devuelve recipe_id por (categoría, nombre). */
+
 public Integer buscarIdPorCategoriaYNombre(String categoryName, String recipeName) throws Exception {
     final String sql =
         "SELECT r.recipe_id " +
@@ -199,13 +195,13 @@ public Integer buscarIdPorCategoriaYNombre(String categoryName, String recipeNam
 public Receta obtenerRecetaPorId(int recipeId) throws Exception {
     Receta out = new Receta();
 
-    // Cabecera (ajusta 'notes' por 'description' si fuera tu caso)
+
     final String sqlHead =
         "SELECT r.recipe_id, r.name, r.servings_base, r.notes " +
         "FROM recipes r " +
         "WHERE r.recipe_id = ?";
 
-    // Detalle
+
     final String sqlDet =
         "SELECT i.name AS ingrediente, ri.quantity, " +
         "       COALESCE(u.symbol, u.name) AS unidad, ri.notes " +
@@ -216,7 +212,7 @@ public Receta obtenerRecetaPorId(int recipeId) throws Exception {
         "ORDER BY i.name";
 
     try (Connection cn = db.getConnection()) {
-        // Cabecera
+
         try (PreparedStatement ps = cn.prepareStatement(sqlHead)) {
             ps.setInt(1, recipeId);
             try (ResultSet rs = ps.executeQuery()) {
@@ -227,7 +223,7 @@ public Receta obtenerRecetaPorId(int recipeId) throws Exception {
                 out.notas       = rs.getString("notes"); // o "description"
             }
         }
-        // Detalle
+
         try (PreparedStatement ps = cn.prepareStatement(sqlDet)) {
             ps.setInt(1, recipeId);
             try (ResultSet rs = ps.executeQuery()) {
@@ -245,7 +241,7 @@ public Receta obtenerRecetaPorId(int recipeId) throws Exception {
     return out;
 }
 
-// En clases/RecipeDao.java
+
 public void actualizarReceta(int recipeId, String nuevoNombre, double nuevaBase, String nuevasNotas,
                              java.util.List<Detalle> items) throws Exception {
     final String sqlUpdHead =
@@ -263,7 +259,7 @@ public void actualizarReceta(int recipeId, String nuevoNombre, double nuevaBase,
     try (java.sql.Connection cn = infra.db.getConnection()) {
         cn.setAutoCommit(false);
         try {
-            // 1) cabecera
+
             try (java.sql.PreparedStatement ps = cn.prepareStatement(sqlUpdHead)) {
                 ps.setString(1, nuevoNombre);
                 ps.setDouble(2, nuevaBase);
@@ -272,13 +268,13 @@ public void actualizarReceta(int recipeId, String nuevoNombre, double nuevaBase,
                 ps.executeUpdate();
             }
 
-            // 2) borrar detalle
+
             try (java.sql.PreparedStatement ps = cn.prepareStatement(sqlDelDet)) {
                 ps.setInt(1, recipeId);
                 ps.executeUpdate();
             }
 
-            // 3) reinsertar detalle
+
             try (java.sql.PreparedStatement psIng = cn.prepareStatement(sqlIngId);
                  java.sql.PreparedStatement psUni = cn.prepareStatement(sqlUniId);
                  java.sql.PreparedStatement psDet = cn.prepareStatement(sqlInsDet)) {

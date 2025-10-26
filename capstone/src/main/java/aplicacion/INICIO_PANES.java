@@ -208,7 +208,6 @@ public class INICIO_PANES extends javax.swing.JFrame {
                     javax.swing.JOptionPane.INFORMATION_MESSAGE);
             return;
         }
-        // Abre la pantalla de edición con el ID
         new EDITAR_PANES(id).setVisible(true);
         dispose();
     } catch (Exception ex) {

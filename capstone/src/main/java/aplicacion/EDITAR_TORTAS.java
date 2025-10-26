@@ -46,8 +46,8 @@ public class EDITAR_TORTAS extends javax.swing.JFrame {
         jTextField1.setText(r.nombre);
         jTextField2.setText(r.notas == null ? "" : r.notas);
 
-        // Detalle en el model editable
-        ingredientesModel.setRowCount(0); // limpia
+
+        ingredientesModel.setRowCount(0);
         for (RecipeDao.Detalle d : r.items) {
             ingredientesModel.addRow(new Object[]{ d.ingrediente, d.cantidad, d.unidad, d.nota });
         }
@@ -158,7 +158,7 @@ public class EDITAR_TORTAS extends javax.swing.JFrame {
 
     private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
                  int r = javax.swing.JOptionPane.showConfirmDialog(
-        this, // si estás en un JFrame; si es un JPanel, igual sirve
+        this, 
         "¿Estás seguro?",
         "Confirmación",
         javax.swing.JOptionPane.YES_NO_OPTION,
@@ -177,10 +177,10 @@ public class EDITAR_TORTAS extends javax.swing.JFrame {
     }
 
     try {
-        // 1) Lee cabecera
+      
         String nombre = jTextField1.getText().trim();
-        String notas  = jTextField2.getText();   // si luego usas JTextArea, queda igual
-        double base   = 1.0; // si usas servings_base, aquí pon el valor real (spinner/campo)
+        String notas  = jTextField2.getText();   
+        double base   = 1.0;
 
         if (nombre.isEmpty()) {
             javax.swing.JOptionPane.showMessageDialog(this, "El nombre no puede estar vacío.",
@@ -188,7 +188,7 @@ public class EDITAR_TORTAS extends javax.swing.JFrame {
             return;
         }
 
-        // 2) Lee detalle desde la tabla editable (ingredientesModel)
+      
         java.util.List<clases.RecipeDao.Detalle> items = new java.util.ArrayList<>();
         for (int i = 0; i < ingredientesModel.getRowCount(); i++) {
             String ing   = String.valueOf(ingredientesModel.getValueAt(i, 0)).trim();
@@ -227,13 +227,13 @@ public class EDITAR_TORTAS extends javax.swing.JFrame {
             items.add(d);
         }
 
-        // 3) Persiste
+     
         recipeDao.actualizarReceta(recipeId, nombre, base, notas, items);
 
         javax.swing.JOptionPane.showMessageDialog(this, "Receta actualizada correctamente.",
                 "Éxito", javax.swing.JOptionPane.INFORMATION_MESSAGE);
 
-        // 4) Volver a la lista (opcional)
+      
         new INICIO_TORTAS().setVisible(true);
         dispose();
 

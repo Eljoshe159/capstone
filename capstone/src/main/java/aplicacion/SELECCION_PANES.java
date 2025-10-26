@@ -1,12 +1,13 @@
 
 package aplicacion;
-import clases.RecipeDao;                // <-- importar
+import clases.RecipeDao;     
 import javax.swing.table.DefaultTableModel;
 
 public class SELECCION_PANES extends javax.swing.JFrame {
 
     private final RecipeDao recipeDao = new RecipeDao();
     private int recipeId = -1;
+    private RecipeDao.Receta recetaActual;
     
     public SELECCION_PANES() {
         initComponents();
@@ -15,9 +16,9 @@ public class SELECCION_PANES extends javax.swing.JFrame {
     }
     
     public SELECCION_PANES(int recipeId) {
-        this();               // init + centrar + configura tabla
+        this();    
         this.recipeId = recipeId;
-        cargarReceta();       // carga nombre e ingredientes
+        cargarReceta();  
     }
     private void configurarTablaSoloLectura() {
         jTable1.setModel(new DefaultTableModel(
@@ -32,20 +33,15 @@ public class SELECCION_PANES extends javax.swing.JFrame {
          jTable1.setColumnSelectionAllowed(false);
     }
 
-    // --- NUEVO: carga datos desde BD ---
+
     private void cargarReceta() {
         try {
             RecipeDao.Receta r = recipeDao.obtenerRecetaPorId(recipeId);
 
-            // Nombre de la receta: lo mostramos, sin editar
+
             jTextField1.setText(r.nombre);
-            jTextField1.setEditable(false);   // solo lectura
+            jTextField1.setEditable(false);   
 
-            // La cantidad (jTextField2) la usarás después con "TRANSFORMAR"
-            // Por ahora la dejamos vacía/editable
-            // jTextField2.setText("");
-
-            // Ingredientes a la tabla (no editable)
             DefaultTableModel dtm = (DefaultTableModel) jTable1.getModel();
             dtm.setRowCount(0);
             for (RecipeDao.Detalle d : r.items) {
@@ -163,7 +159,7 @@ public class SELECCION_PANES extends javax.swing.JFrame {
 
     private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
         int r = javax.swing.JOptionPane.showConfirmDialog(
-        this, // si estás en un JFrame; si es un JPanel, igual sirve
+        this,
         "¿Estás seguro?",
         "Confirmación",
         javax.swing.JOptionPane.YES_NO_OPTION,
@@ -177,7 +173,33 @@ public class SELECCION_PANES extends javax.swing.JFrame {
     }//GEN-LAST:event_jButton4ActionPerformed
 
     private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
-        // TODO add your handling code here:
+        if (recetaActual == null) {
+        javax.swing.JOptionPane.showMessageDialog(this, "No hay receta cargada.", "Aviso",
+                javax.swing.JOptionPane.WARNING_MESSAGE);
+        return;
+    }
+    double factor;
+    try {
+        factor = Double.parseDouble(jTextField2.getText().trim());
+        if (factor <= 0) throw new NumberFormatException();
+    } catch (NumberFormatException nfe) {
+        javax.swing.JOptionPane.showMessageDialog(this, "Cantidad inválida. Ej: 2 o 2.5", "Validación",
+                javax.swing.JOptionPane.WARNING_MESSAGE);
+        return;
+    }
+
+    
+    java.util.List<RecipeDao.Detalle> itemsTransformados = new java.util.ArrayList<>();
+    for (RecipeDao.Detalle d : recetaActual.items) {
+        RecipeDao.Detalle t = new RecipeDao.Detalle();
+        t.ingrediente = d.ingrediente;
+        t.cantidad    = d.cantidad * factor;
+        t.unidad      = d.unidad;
+        t.nota        = d.nota;
+        itemsTransformados.add(t);
+    }
+
+    
     }//GEN-LAST:event_jButton5ActionPerformed
 
     /**

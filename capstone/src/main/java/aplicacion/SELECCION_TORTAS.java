@@ -128,7 +128,7 @@ public class SELECCION_TORTAS extends javax.swing.JFrame {
 
     private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
                  int r = javax.swing.JOptionPane.showConfirmDialog(
-        this, // si estás en un JFrame; si es un JPanel, igual sirve
+        this,
         "¿Estás seguro?",
         "Confirmación",
         javax.swing.JOptionPane.YES_NO_OPTION,
